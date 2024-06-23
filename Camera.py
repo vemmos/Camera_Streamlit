@@ -2,6 +2,37 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
 import cv2
 import numpy as np
+from openai import OpenAI
+import os
+
+OPENAI_API_KEY = "ADD KEY HERE"
+MODEL = "gpt-3.5-turbo"
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+def askCHATGPT(food, diet):
+  response = client.chat.completions.create(
+      model=MODEL,
+      messages=[
+          {"role": "system", "content": "What are the ingredients in "+ food + "?"},
+      ],
+      temperature=0,
+  )
+
+  responseJSON = json.dumps(json.loads(response.model_dump_json()), indent=4)
+  response_dict = json.loads(responseJSON)
+  answer = response_dict["choices"][0]["message"]["content"]
+
+  response = client.chat.completions.create(
+      model=MODEL,
+      messages=[
+          {"role": "system", "content": "Can I eat " + food + " if I have " + diet + "? Answer in under 20 words."},
+      ],
+      temperature=0,
+  )
+  responseJSON = json.dumps(json.loads(response.model_dump_json()), indent=4)
+  response_dict = json.loads(responseJSON)
+  answer = response_dict["choices"][0]["message"]["content"]
+  return answer
 
 class VideoProcessor(VideoTransformerBase):
     def __init__(self) -> None:

@@ -9,6 +9,7 @@ OPENAI_API_KEY = "ADD KEY HERE"
 MODEL = "gpt-3.5-turbo"
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+#This function gets the ChatGPT response
 def askCHATGPT(food, diet):
   response = client.chat.completions.create(
       model=MODEL,

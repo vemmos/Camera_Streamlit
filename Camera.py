@@ -4,10 +4,11 @@ import cv2
 import numpy as np
 from openai import OpenAI
 import os
+import json
 
-OPENAI_API_KEY = "ADD KEY HERE"
+OPENAI_API_KEY = ""
 MODEL = "gpt-3.5-turbo"
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 #This function gets the ChatGPT response
 def askCHATGPT(food, diet):
@@ -48,7 +49,7 @@ def classify_image(image):
     return "Sample Classification Result"
 
 def main():
-    st.title('Food Dietary Restrictions and Camera Access')
+    st.title('Briefly tell us about your dietary restrictions or how you would like to eat healthier')
 
     # Initialize or increment a form counter
     if 'form_counter' not in st.session_state:
@@ -63,14 +64,7 @@ def main():
     # Display the form if it hasn't been submitted
     if not st.session_state.submitted:
         with st.form(key=form_key):
-            st.header("Please select your dietary restrictions:")
-            vegan = st.checkbox('Vegan')
-            vegetarian = st.checkbox('Vegetarian')
-            gluten_free = st.checkbox('Gluten-free')
-            nut_free = st.checkbox('Nut-free')
-            dairy_free = st.checkbox('Dairy-free')
-            diabetic = st.checkbox('Diabetic-friendly')
-            low_carb = st.checkbox('Low Carb')
+            user_query = st.text_input("")
 
             submitted = st.form_submit_button("Submit and take a pic")
             if submitted:
@@ -86,17 +80,16 @@ def main():
                 if ctx.video_processor.image is not None:
                     st.session_state.captured_image = ctx.video_processor.image
                     classification_result = classify_image(ctx.video_processor.image)
-                    st.write("Food Detected: Chocolate Bar")
+
 
         if 'captured_image' in st.session_state and st.session_state.captured_image is not None:
             col1, col2 = st.columns(2)
             with col1:
-                st.image(st.session_state.captured_image, channels="BGR", caption="Captured Image")
+                st.image(st.session_state.captured_image, channels="BGR", caption="Chocolate Croissant")
             with col2:
-                st.markdown("""
-                    <iframe src="https://www.chatbase.co/chatbot-iframe/cNsNWfkG7s7M-ukSqWj-9"
-                    width="100%" style="height: 700px" frameborder="0"></iframe>
-                    """, unsafe_allow_html=True)
+                st.write("", askCHATGPT("Chocolate Croissant","Vegan"))
+
+                
 
 if __name__ == "__main__":
     main()

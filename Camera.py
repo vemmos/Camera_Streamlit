@@ -28,7 +28,7 @@ def main():
 
         if submitted:
             st.session_state.page = 'camera'
-            st.experimental_rerun()
+            st.rerun()
 
     elif st.session_state.page == 'camera':
         st.title("Live Camera Feed with OpenCV")
@@ -37,7 +37,7 @@ def main():
             video_frame_callback=VideoTransformer(),
             rtc_configuration=RTC_CONFIGURATION,
             media_stream_constraints={"video": True, "audio": False},
-            async_transform=True
+            async_processing=True
         )
 
 if __name__ == "__main__":

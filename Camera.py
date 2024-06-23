@@ -1,44 +1,70 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
-import av
+import cv2
+import numpy as np
 
-# Streamlit page configuration
-st.set_page_config(page_title='Dietary and Camera App', layout='wide')
+class VideoProcessor(VideoTransformerBase):
+    def __init__(self) -> None:
+        self.image = None
 
-RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-)
-
-class VideoTransformer(VideoTransformerBase):
-    def transform(self, frame: av.VideoFrame) -> av.VideoFrame:
+    def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
-        # Apply any OpenCV transformations or filters here
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
+        self.image = img
+        return img
+
+def classify_image(image):
+    return "Sample Classification Result"
 
 def main():
-    st.title('Dietary Restrictions Form')
-    if 'page' not in st.session_state:
-        st.session_state.page = 'form'
+    st.title('Food Dietary Restrictions and Camera Access')
 
-    if st.session_state.page == 'form':
-        with st.form("diet_form"):
-            allergies = st.text_input("List any allergies")
-            preferences = st.text_input("Dietary preferences (e.g., vegetarian, low-carb)")
-            submitted = st.form_submit_button("Submit")
+    # Initialize or increment a form counter
+    if 'form_counter' not in st.session_state:
+        st.session_state.form_counter = 0
 
-        if submitted:
-            st.session_state.page = 'camera'
-            st.rerun()
+    form_key = f"diet_form_{st.session_state.form_counter}"
 
-    elif st.session_state.page == 'camera':
-        st.title("Live Camera Feed with OpenCV")
-        webrtc_streamer(
-            key="example",
-            video_frame_callback=VideoTransformer(),
-            rtc_configuration=RTC_CONFIGURATION,
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True
-        )
+    # Manage the state to see if the form has been submitted
+    if 'submitted' not in st.session_state:
+        st.session_state.submitted = False
+
+    # Display the form if it hasn't been submitted
+    if not st.session_state.submitted:
+        with st.form(key=form_key):
+            st.header("Please select your dietary restrictions:")
+            vegan = st.checkbox('Vegan')
+            vegetarian = st.checkbox('Vegetarian')
+            gluten_free = st.checkbox('Gluten-free')
+            nut_free = st.checkbox('Nut-free')
+            dairy_free = st.checkbox('Dairy-free')
+            diabetic = st.checkbox('Diabetic-friendly')
+            low_carb = st.checkbox('Low Carb')
+
+            submitted = st.form_submit_button("Submit and take a pic")
+            if submitted:
+                st.session_state.submitted = True
+                st.session_state.form_counter += 1  # Increment the counter after submission
+
+    # Display camera and image
+    if st.session_state.submitted:
+        st.header("Camera Feed")
+        ctx = webrtc_streamer(key="example", video_processor_factory=VideoProcessor)
+        if ctx.video_processor:
+            if st.button("Take a pic"):
+                if ctx.video_processor.image is not None:
+                    st.session_state.captured_image = ctx.video_processor.image
+                    classification_result = classify_image(ctx.video_processor.image)
+                    st.write("Food Detected: Chocolate Bar")
+
+        if 'captured_image' in st.session_state and st.session_state.captured_image is not None:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(st.session_state.captured_image, channels="BGR", caption="Captured Image")
+            with col2:
+                st.markdown("""
+                    <iframe src="https://www.chatbase.co/chatbot-iframe/cNsNWfkG7s7M-ukSqWj-9"
+                    width="100%" style="height: 700px" frameborder="0"></iframe>
+                    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
